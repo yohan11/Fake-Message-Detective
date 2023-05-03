@@ -46,5 +46,9 @@
 
 ## 🔍 프로젝트 참고 자료
 환경 세팅 : https://wikidocs.net/91422
+
+
 연동 관련 : https://velog.io/@devmin/Django-MySQL-Connect
+
+
           https://losskatsu.github.io/it-infra/mssql-django-conn/
