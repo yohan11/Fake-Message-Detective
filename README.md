@@ -51,4 +51,4 @@
 연동 관련 : https://velog.io/@devmin/Django-MySQL-Connect
 
 
-          https://losskatsu.github.io/it-infra/mssql-django-conn/
+https://losskatsu.github.io/it-infra/mssql-django-conn/
