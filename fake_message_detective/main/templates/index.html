@@ -6,34 +6,36 @@
 		<meta name="viewport" content="width=divice-width" />
 		<title>Title</title>
 		<link rel="stylesheet" href="{% static 'style.css' %}" />
+		<script
+			src="https://kit.fontawesome.com/e23cdb4573.js"
+			crossorigin="anonymous"
+		></script>
 	</head>
 	<body>
-		<div class="container">
-			<div class="header">둘째</div>
+		<div class="header">둘째</div>
 
-			<div class="in">
-				<ul>
-					{% for list in messageList %}
-					<li>
-						<p class="msg_y">{{list.message_content}}</p>
+		<div class="in">
+			<ul>
+				{% for list in messageList %}
+				<li>
+					<p class="msg_y">{{list.message_content}}</p>
 
-						<span class="time">{{list.message_sent_time}}</span>
-						{% endfor %}
-					</li>
-
-					<div class="tooltip">피싱메시지로 의심돼요.</div>
-				</ul>
-			</div>
-			<form action="{% url 'inputform' %}" method="POST">
-				{% csrf_token %}
-				<input
-					type="text"
-					name="message_content"
-					id="message_content"
-					placeholder=" 입력 "
-				/>
-				<input type="submit" value="제출" />
-			</form>
+					<span class="time">{{list.message_sent_time}}</span>
+					{% endfor %}
+				</li>
+			</ul>
 		</div>
+		<form action="{% url 'inputform' %}" method="POST">
+			{% csrf_token %}
+			<input
+				type="text"
+				name="message_content"
+				id="message_content"
+				placeholder=" 입력 "
+			/>
+			<button type="submit" id="submit">
+				<i class="far fa-regular fa-paper-plane"></i>
+			</button>
+		</form>
 	</body>
 </html>
