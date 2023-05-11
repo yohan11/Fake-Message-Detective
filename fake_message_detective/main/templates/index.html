@@ -3,37 +3,29 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=divice-width">
+		<meta name="viewport" content="width=divice-width" />
 		<title>Title</title>
 		<link rel="stylesheet" href="{% static 'style.css' %}" />
 	</head>
 	<body>
-		<h1 >
-			캡스톤 프로젝트 - fake message dective 시작!
-		</h1>
-		<div class="ground">
-			<div class="name">
-				둘째
-			</div>
-			<div class="in">
-				<p class="msg_y">엄마, 내일 뭐하세요?</p>
-					<span class="time">오전 10:00</span>
-				<p class="msg_m">별거 없지 왜?</p>
-					<span class="time">오전 10:04</span> 
-				<p class="msg_y">오랜만에 같이 밥 한끼 하고싶어서요</p>
-					<span class="time">오전 10:10</span>
-				<p class="msg_y">뭐 드시고 싶은거 없으세요??</p>
-					<span class="time">오전 10:11</span>
-				<p class="msg_y">내가 쏜다 쏜다 쏜다~!</p>
-					<span class="time">오전 10:11</span>
-				<p class="wmsg_y">엄마 내가 갑자기 지갑을 잃어버렸는데, 혹시 이 계좌로 돈 좀 보내줄 수 있어? 친구 계좌야.</p>
-					<span class="time">오전 10:15</span>
-					<div class="tooltip">피싱메시지로 의심돼요.</div>
+		<div class="container">
+			<div class="header">둘째</div>
 
-				
-				
+			<div class="in">
+				<ul>
+					{% for list in messageList %}
+					<li>
+						<p class="msg_y">{{list.message_content}}</p>
+
+						<span class="time">{{list.message_sent_time}}</span>
+						{% endfor %}
+					</li>
+
+					<div class="tooltip">피싱메시지로 의심돼요.</div>
+				</ul>
 			</div>
-			<input type="text" class="" placeholder=" 입력 ">
+
+			<input type="text" class="" placeholder=" 입력 " />
 		</div>
 	</body>
 </html>
