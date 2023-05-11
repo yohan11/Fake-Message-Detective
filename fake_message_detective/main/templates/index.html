@@ -24,8 +24,16 @@
 					<div class="tooltip">피싱메시지로 의심돼요.</div>
 				</ul>
 			</div>
-
-			<input type="text" class="" placeholder=" 입력 " />
+			<form action="{% url 'inputform' %}" method="POST">
+				{% csrf_token %}
+				<input
+					type="text"
+					name="message_content"
+					id="message_content"
+					placeholder=" 입력 "
+				/>
+				<input type="submit" value="제출" />
+			</form>
 		</div>
 	</body>
 </html>
