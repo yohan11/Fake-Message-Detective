@@ -1,3 +1,116 @@
 .hi{
     color: red;
 }
+.ground{
+    position:relative;
+    display:inline-block;
+    border: 1px solid black;
+    border-radius:5px;
+    width: 300px;
+    height: 500px;
+}
+.name{
+    border-radius:5px;
+    text-align: center;
+    background-color: lightblue;
+    padding:15px;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 3px 3px 3px gray;
+}
+.in{
+    overflow-x: scroll;
+    overflow-y:scroll;
+    position :relative;
+    background-color:rgb(225, 244, 237);
+    border-radius:10px 10px;
+    padding-top:5px;
+    top: 5px;
+    height: 400px;
+}
+.time{
+    position: absolute;
+    font-size:5px;
+    color:black;
+    padding-top:20px;
+    
+}
+
+.msg_y{
+    text-align: left;
+    left: 10px;
+    display: inline-block;
+    border: 1px solid black;
+    border-radius:15px 15px;
+    padding:7px 15px;
+    margin: 5px;
+    background-color: rgb(25, 25, 224);
+    font-size:13px; 
+    color:white;
+    box-shadow: 3px 3px 3px gray;
+} 
+.msg_m{
+    right: -160px;
+    text-align:  right; 
+    display: inline-block;
+    border: 1px solid black;
+    border-radius:15px 15px;
+    padding:7px 15px;
+    margin: 5px;
+    background-color: rgb(145, 137, 137);
+    font-size:13px; 
+    color:white;
+    position: relative;
+    box-shadow: 3px 3px 3px gray;
+}
+.wmsg_y{
+    text-align: left;
+    left: 10px;
+    display: inline-block;
+    border: 1px solid black;
+    border-radius:15px 15px;
+    padding:7px 15px;
+    margin: 5px;
+    background-color: rgb(216, 100, 17);
+    font-size:13px; 
+    color:white;
+    box-shadow: 3px 3px 3px gray;
+}
+input[type="text"]{
+    border:0; 
+    width: 100%;
+    background: rgb(227, 233, 227);
+    border-radius:5px;
+    height: 30px;
+    padding-left:10px;
+    box-sizing: border-box;
+    margin-top: 5px;
+}
+input[type="text"]::placeholder{color:rgb(165, 167, 168)}
+.tooltip{
+    position: absolute;
+    background-color: white;
+    border:1px solid black;
+    padding:5px;
+    border-radius:5px;
+    text-align: center;
+    display: none;
+    font-size: 10px;
+}
+.tooltip:after{
+    display:block;
+    position: absolute;
+   
+
+}
+.ground:hover .tooltip{display: block;}
+/*
+    border-radius: 3px;
+    border-color: blue;
+    padding-top:5px;
+    padding-left: 10px;
+    margin: 10px;
+    
+    box-sizing: border-box;
+    width: 200px;
+    height: 25px;
