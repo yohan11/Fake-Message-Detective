@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS `MESSAGE_DATA`.`message` (
   `user_id` INT NULL,
   `message_content` MEDIUMTEXT NULL,
   `message_sent_time` DATETIME NULL,
+  `is_warning` TINYINT NULL,
   PRIMARY KEY (`message_id`),
   INDEX `fk_message_user_id_idx` (`user_id` ASC) VISIBLE,
   CONSTRAINT `fk_message_user_id`
