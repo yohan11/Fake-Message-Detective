@@ -127,6 +127,7 @@ class Message(models.Model):
     user = models.ForeignKey('User', models.DO_NOTHING, blank=True, null=True)
     message_content = models.TextField(blank=True, null=True)
     message_sent_time = models.DateTimeField(blank=True, null=True)
+    is_warning = models.IntegerField(blank=True, null=True)
 
     class Meta:
         managed = False
