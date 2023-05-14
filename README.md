@@ -14,7 +14,7 @@
 
 
 ## 2. 화면 설계
-
+<img src="https://github.com/yohan11/Fake-Message-Detective/assets/40304565/1bfe98d5-dc5a-425a-b058-2c0c8e6a72bc" />
 
 
 
