@@ -3,6 +3,8 @@
 :root {
 	--vh: 100%;
 	--main: #007aff;
+	--warningText: #e52d2d;
+	--warningBallon: #ff6b00;
 }
 
 body {
@@ -16,19 +18,6 @@ ul {
 	padding: 0;
 }
 
-form {
-	text-align: center;
-	position: fixed;
-	width: 90%;
-	display: flex;
-	justify-content: space-between;
-	bottom: 10px;
-	margin-top: 10px;
-	margin: 0 auto;
-	left: 0;
-	right: 0;
-}
-
 i {
 	font-family: "Font Awesome 5 Solid";
 	color: white;
@@ -38,8 +27,8 @@ i {
 svg {
 	width: 18px;
 	height: 18px;
-	margin-right: 10px;
-	color: #e52d2d;
+	margin-right: 5px;
+	color: var(--warningText);
 	vertical-align: middle;
 }
 
@@ -128,14 +117,19 @@ svg {
 	padding: 7px 15px;
 	margin: 10px;
 	margin-left: 20px;
-	background-color: #ff6b00;
+	background-color: var(--warningBallon);
 	font-size: 1rem;
 	color: white;
 	box-shadow: 0px 4px 9px gray;
 }
 
+.wmsg_y,
+.close_btn:hover {
+	cursor: pointer;
+}
+
 .warning_message {
-	color: #e52d2d;
+	color: var(--warningText);
 	margin: 20px 0 0 20px;
 	font-weight: 600;
 	display: flex;
@@ -144,4 +138,103 @@ svg {
 
 .warning_message > div {
 	margin-top: 5px;
+}
+
+.input_form {
+	text-align: center;
+	position: fixed;
+	width: 90%;
+	display: flex;
+	justify-content: space-between;
+	bottom: 10px;
+	margin-top: 10px;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+}
+.modal {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	display: none;
+	background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal_body {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+
+	width: 70%;
+	height: 40%;
+
+	padding: 40px;
+
+	text-align: center;
+
+	background-color: rgb(255, 255, 255);
+	border-radius: 10px;
+	box-shadow: 0 2px 3px 0 rgba(34, 36, 38, 0.15);
+
+	transform: translateX(-50%) translateY(-50%);
+}
+
+.modal_title {
+	font-size: 1.2rem;
+	font-weight: 600;
+	color: var(--warningText);
+}
+
+.modal_subtitle {
+	font-size: 1rem;
+	font-weight: 500;
+	color: rgb(96, 95, 95);
+	margin-bottom: 30px;
+}
+
+.modal_btns {
+	width: 90%;
+	text-align: center;
+	margin: auto;
+	display: flex;
+	justify-content: space-between;
+	margin-top: 40px;
+}
+
+.warning_check_btn {
+	font-size: 1rem;
+	font-weight: 600;
+	padding: 10px;
+	border-radius: 20px;
+	border: none;
+	width: 70%;
+	box-shadow: 0px 4px 9px gray;
+	color: white;
+}
+
+.warning_check_btn:hover {
+	cursor: pointer;
+	box-shadow: none;
+	transition-duration: 0.3s;
+}
+
+.valid {
+	background-color: var(--warningText);
+}
+
+.invalid {
+	background-color: var(--main);
+}
+
+.input_check {
+	margin: 0;
+	padding: 0;
+	width: 50%;
+}
+
+.close_btn {
+	text-align: end;
+	margin: auto;
 }
