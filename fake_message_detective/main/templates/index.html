@@ -10,7 +10,6 @@
 			src="https://kit.fontawesome.com/e23cdb4573.js"
 			crossorigin="anonymous"
 		></script>
-		<script src="{% static 'index.js' %}"></script>
 	</head>
 	<body>
 		<div class="header">주녕</div>
@@ -34,13 +33,24 @@
 						</svg>
 						<div>피싱 메시지로 의심돼요.</div>
 					</div>
-					<a class="btn_open_popup"
+					<a
+						class="btn_open_popup {{list.message_id}}"
+						onclick="openModal(this);"
 						><p class="wmsg_y">{{list.message_content}}</p></a
 					>
 					<span class="time">{{list.message_sent_time}}</span>
-					<div class="modal {{list.message_id}}">
+					<div
+						id="modal-{{list.message_id}}"
+						class="modal"
+						style="display: none"
+					>
 						<div class="modal_body">
-							<div class="close_btn">❌</div>
+							<div
+								class="close_btn {{list.message_id}}"
+								onclick="closeModal(this);"
+							>
+								❌
+							</div>
 							<p class="modal_title">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -65,6 +75,20 @@
 									method="POST"
 									class="input_check"
 								>
+									<input
+										type="text"
+										value="{{list.message_id}}"
+										name="warning_message_id"
+										class="invisible"
+										style="display: none"
+									/>
+									<input
+										type="text"
+										value="{{list.user}}"
+										name="warning_message_user"
+										class="invisible"
+										style="display: none"
+									/>
 									{% csrf_token %}
 									<button type="submit" class="warning_check_btn invalid">
 										네, <br />진짜메시지에요
@@ -75,6 +99,20 @@
 									method="POST"
 									class="input_check"
 								>
+									<input
+										type="text"
+										value="{{list.message_id}}"
+										name="warning_message_id"
+										class="invisible"
+										style="display: none"
+									/>
+									<input
+										type="text"
+										value="{{list.user}}"
+										name="warning_message_user"
+										class="invisible"
+										style="display: none"
+									/>
 									{% csrf_token %}
 									<button type="submit" class="warning_check_btn valid">
 										아니요, <br />가짜메시지에요
@@ -104,15 +142,15 @@
 		</form>
 	</body>
 	<script>
-		const modal = document.querySelector(".modal");
-		const btnOpenPopup = document.querySelector(".btn_open_popup");
-		const btnClosePopup = document.querySelector(".close_btn");
-
-		btnOpenPopup.onclick = function () {
+		function openModal(e) {
+			id = e.classList[1];
+			var modal = document.getElementById("modal-" + id);
 			modal.style.display = "block";
-		};
-		btnClosePopup.onclick = function () {
+		}
+		function closeModal(e) {
+			id = e.classList[1];
+			var modal = document.getElementById("modal-" + id);
 			modal.style.display = "none";
-		};
+		}
 	</script>
 </html>

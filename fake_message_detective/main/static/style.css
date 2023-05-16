@@ -238,3 +238,7 @@ svg {
 	text-align: end;
 	margin: auto;
 }
+
+.invisible {
+	display: none;
+}
