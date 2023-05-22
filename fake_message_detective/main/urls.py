@@ -10,4 +10,5 @@ urlpatterns = [
     path('inputform/', views.inputform, name='inputform'),
     path('inputInvalid/', views.inputInvalid, name='inputInvalid') ,
     path('inputValid/', views.inputValid, name='inputValid'),
+    path('result/', views.classifyBanJon, name='classifyBanJon'),
 ]
