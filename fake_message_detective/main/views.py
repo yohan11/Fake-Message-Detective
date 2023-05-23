@@ -131,5 +131,76 @@ def classifyBanJon(request):
 
     return render(request,'result.html',{'ban_jon':is_banjon})
 
+##자주 틀리는 맞춤법 추출
+from .hanspell import spell_checker
+from pykospacing import Spacing
+from collections import Counter
+import string
    
+def iconicSpell(request):
+    # 문법 오류 교정
+    def check_spelling_errors(text):
+        spelled = spell_checker.check(text)
+        checked_text = spelled.checked
+
+        return checked_text
+
+    # 맞춤법 틀린 부분 찾기 - 원본 텍스트와 교정 텍스트에서 다른 부분 비교
+    def find_different_characters(text1, text2):
+        differences = []
+
+        # 두 문장의 길이 중 짧은 길이를 기준으로 순회
+        min_length = min(len(text1), len(text2))
+        for i in range(min_length):
+            if text1[i] != text2[i]:
+                differences.append((text2[i], text1[i]))
+
+        # 길이가 다른 나머지 부분의 글자 추가
+        if len(text1) > len(text2):
+            differences.extend([(char, '') for char in text1[min_length:]])
+        elif len(text1) < len(text2):
+            differences.extend([('', char) for char in text2[min_length:]])
+
+        return differences
+
+    # 가장 많이 틀리는 맞춤법 추출
+    def find_most_common_characters(differences, top_n):
+        # 문장부호 제외
+        punctuation = set(string.punctuation)
+        differences = [(char1, char2) for char1, char2 in differences if char1 not in punctuation and char2 not in punctuation]
+        
+        counter = Counter(differences)
+        most_common = counter.most_common(top_n)
+        return [mc[0] for mc in most_common]
+
+    messages = Message.objects.all()
+    # message_content 값만 가져오기
+    texts = [message.message_content for message in messages]
+    # 띄어쓰기 전처리를 하여 불필요한 결과값 없앰
+    spacing = Spacing()
+    spacing_texts=[spacing(text) for text in texts]
+
+    all_differences = []
+
+    for text in spacing_texts:
+        # 맞춤법 오류 체크
+        checked_text= check_spelling_errors(text)
+        print("원본 텍스트:", text)
+        print("교정된 텍스트:", checked_text)
+
+        # 차이를 찾아내고 모든 차이를 합침
+        differences = find_different_characters(text, checked_text)
+        all_differences.extend(differences)
+
+    # 가장 많이 틀리는 맞춤법 상위 3개 추출
+    top_3_most_common_characters = find_most_common_characters(all_differences, 3)
+
+    # 띄어쓰기 전처리 과정에서 잡아내지 못한 부분 보기쉽게 처리해줌
+    for i in range(len(top_3_most_common_characters)):
+        for c in top_3_most_common_characters[i]:
+            if c==' ':
+                top_3_most_common_characters[i]='띄어쓰기 오류'
+
+
+    return render(request,'result2.html',{'iconic':top_3_most_common_characters})
 
