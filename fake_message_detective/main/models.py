@@ -141,6 +141,8 @@ class User(models.Model):
     user_id = models.AutoField(primary_key=True)
     user_name = models.CharField(max_length=45, blank=True, null=True)
     user_phone = models.CharField(max_length=45, blank=True, null=True)
+    accent_formal = models.IntegerField(blank=True, null=True)
+    accent_spell = models.CharField(max_length=45, blank=True, null=True)
 
     class Meta:
         managed = False

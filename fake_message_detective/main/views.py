@@ -37,7 +37,6 @@ def inputInvalid(request):
         std.warning_valid=0
         std.save()
 
-
     return redirect('/')
 
 def inputValid(request):
@@ -78,15 +77,7 @@ def classifyBanJon(request):
     padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post')
 
     #overfitting을 방지하기 위한 early stopping
-    early_stopping = EarlyStopping(
-
-    min_delta=0.001,   # 개선으로 간주되는 최소 변경 크기. 이 값만큼 개선이 없으면 Early Stopping 대상이 됩니다. 
-
-    patience=20,          # Early Stopping이 실제로 학습을 중지하기 전에 몇 epoch를 기다릴지를 의미합니다. 
-
-    restore_best_weights=True, # Early Stopping시 이전에 찾은 최적의 가중치값으로 복원합니다. 
-
-)
+    early_stopping = EarlyStopping()
 
     # 모델 생성
     model = tf.keras.models.Sequential([
@@ -102,13 +93,13 @@ def classifyBanJon(request):
     padded_sequences = np.array(padded_sequences)
     labels = np.array(labels)
     # 모델 훈련
-    model.fit(padded_sequences, labels, epochs=30, callbacks=[early_stopping] )
+    model.fit(padded_sequences, labels, epochs=10, callbacks=[early_stopping] )
 
     # 새로운 텍스트 예측
     # 모든 message_content 가져오기
     messages = Message.objects.all()
     # message_content 값만 가져오기
-    new_texts = [message.message_content for message in messages]
+    new_texts = [spell_checker.check(message.message_content).checked for message in messages]
     
     new_sequences = tokenizer.texts_to_sequences(new_texts)
     new_padded_sequences = pad_sequences(new_sequences, maxlen=max_length, padding='post')
@@ -116,24 +107,25 @@ def classifyBanJon(request):
 
     count_ban = 0
     count_jon = 0
-    is_banjon = ''
+
     for i, text in enumerate(new_texts):
-        if predictions[i] > 0.5:
+        if predictions[i] < 0.5:
             print(f"'{text}'은(는) 반말입니다.")
             count_ban += 1
         else:
             print(f"'{text}'은(는) 존댓말입니다.")
             count_jon += 1
-    if count_ban > count_jon:
-        is_banjon="해당 사용자는 반말을 더 많이 사용함"
-    else:
-        is_banjon="해당 사용자는 존댓말을 더 많이 사용함"
 
-    return render(request,'result.html',{'ban_jon':is_banjon})
+    user = User.objects.get(user_name='주녕')
+    if count_ban > count_jon:
+        user.accent_formal=0
+    else:
+        user.accent_formal=1
+    user.save()
+    return redirect('/')
 
 ##자주 틀리는 맞춤법 추출
 from .hanspell import spell_checker
-from pykospacing import Spacing
 from collections import Counter
 import string
    
@@ -176,15 +168,16 @@ def iconicSpell(request):
     messages = Message.objects.all()
     # message_content 값만 가져오기
     texts = [message.message_content for message in messages]
-    # 띄어쓰기 전처리를 하여 불필요한 결과값 없앰
-    spacing = Spacing()
-    spacing_texts=[spacing(text) for text in texts]
 
     all_differences = []
 
-    for text in spacing_texts:
+    for text in texts:
         # 맞춤법 오류 체크
         checked_text= check_spelling_errors(text)
+        # 띄어쓰기 전처리를 하여 불필요한 결과값 없앰
+
+        text=[c for c in text if c != ' ']
+        checked_text=[c for c in checked_text if c != ' ']
         print("원본 텍스트:", text)
         print("교정된 텍스트:", checked_text)
 
@@ -192,15 +185,12 @@ def iconicSpell(request):
         differences = find_different_characters(text, checked_text)
         all_differences.extend(differences)
 
+    print(all_differences)
     # 가장 많이 틀리는 맞춤법 상위 3개 추출
     top_3_most_common_characters = find_most_common_characters(all_differences, 3)
 
-    # 띄어쓰기 전처리 과정에서 잡아내지 못한 부분 보기쉽게 처리해줌
-    for i in range(len(top_3_most_common_characters)):
-        for c in top_3_most_common_characters[i]:
-            if c==' ':
-                top_3_most_common_characters[i]='띄어쓰기 오류'
-
-
-    return render(request,'result2.html',{'iconic':top_3_most_common_characters})
-
+    print(top_3_most_common_characters)
+    user = User.objects.get(user_name='주녕')
+    user.accent_spell=str(top_3_most_common_characters)
+    user.save()
+    return redirect('/')
