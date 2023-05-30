@@ -12,4 +12,5 @@ urlpatterns = [
     path('inputValid/', views.inputValid, name='inputValid'),
     path('result/', views.classifyBanJon, name='classifyBanJon'),
     path('result2/', views.iconicSpell, name='iconicSpell'),
+    path('findWarningMessage/', views.findWarningMessage, name='findWarningMessage'),
 ]

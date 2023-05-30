@@ -6,136 +6,6 @@ from sklearn.metrics import accuracy_score
 
 def index(request):
     messageList = Message.objects.all()
-    message_info={}
-    for message in messageList:
-        message_info[message.message_id]=[]
-    user = User.objects.get(user_name='주녕')
-    warning = Warning.objects.all()
-    
-
-    def is_formal_match():
-        sentences = dataset_sentences
-        labels = dataset_labels  # 1: 반말, 0: 존댓말
-
-        # 텍스트 데이터를 정수 시퀀스로 변환
-        tokenizer = Tokenizer(oov_token="<OOV>")
-        tokenizer.fit_on_texts(sentences)
-        word_index = tokenizer.word_index
-        sequences = tokenizer.texts_to_sequences(sentences)
-
-        # 시퀀스 패딩
-        max_length = max([len(seq) for seq in sequences])
-        padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post')
-
-        #overfitting을 방지하기 위한 early stopping
-        early_stopping = EarlyStopping()
-
-        # 데이터 형식 맞추기
-        padded_sequences = np.array(padded_sequences)
-        labels = np.array(labels)
-
-        # 데이터셋을 훈련 데이터와 테스트 데이터로 분리
-        X_train, X_test, y_train, y_test = train_test_split(padded_sequences, labels, test_size=0.2, random_state=42)
-
-        # 모델 생성 및 훈련
-        model = tf.keras.models.Sequential([
-            tf.keras.layers.Embedding(len(word_index) + 1, 32, input_length=max_length),
-            tf.keras.layers.Conv1D(64, 5, activation='relu'),
-            tf.keras.layers.MaxPooling1D(4),
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
-            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
-            tf.keras.layers.Dense(32, activation='relu'),
-            tf.keras.layers.Dense(1, activation='sigmoid')
-        ])
-        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-        model.fit(X_train, y_train, epochs=10, callbacks=[early_stopping])
-
-        # 테스트 데이터에 대한 예측
-        y_pred = model.predict(X_test)
-        y_pred = (y_pred > 0.5).astype(int)
-
-        # 정확도 평가
-        accuracy = accuracy_score(y_test, y_pred)
-        print("테스트 데이터 정확도:", accuracy)
-
-        # 새로운 텍스트 예측
-        new_texts = [spell_checker.check(message.message_content).checked for message in messageList]
-
-        new_sequences = tokenizer.texts_to_sequences(new_texts)
-        new_padded_sequences = pad_sequences(new_sequences, maxlen=max_length, padding='post')
-        predictions = model.predict(new_padded_sequences)
-
-        for i, text in enumerate(new_texts):
-            if predictions[i] <= 0.5:
-                is_formal = 0
-            else:
-                is_formal = 1
-
-            print(text, ':', is_formal)
-            print(is_formal, user.accent_formal)
-
-            if is_formal != user.accent_formal:
-                message_info[i+1].append(1)
-            else:
-                message_info[i+1].append(0)
-                
-    def spell_match():
-        user_spell_tuple=eval(user.accent_spell)
-        user_spell=[user_spell_tuple[i][1] for i in range(3)]
-        origin_spell=[user_spell_tuple[i][0] for i in range(3)]
-
-        new_texts = [message.message_content for message in messageList]
-        for i, text in enumerate(new_texts):
-            if any(char in text for char in origin_spell):
-                if not any(char2 in text for char2 in user_spell):
-                    message_info[i+1].append(1)
-                else:
-                    message_info[i+1].append(0)
-            else:
-                message_info[i+1].append(0)
-    def keyword_match():
-        new_texts = [message.message_content for message in messageList]
-        for i, text in enumerate(new_texts):
-            if any(char in text for char in phishing_keyword):       
-                message_info[i+1].append(1)
-            else:
-                message_info[i+1].append(0)
-
-    if len(messageList)>10:
-        is_formal_match()
-        spell_match()
-        keyword_match()
-        for message in messageList:
-            w_message=Message.objects.get(message_id=message.message_id)
-
-            if message_info[message.message_id].count(1) >= 2:
-                w_message.is_warning=1
-                if not Warning.objects.filter(message_id=message.message_id):
-                    std =Warning()
-                    std.message = Message.objects.get(message_id=message.message_id)
-                    std.user = User.objects.get(user_name="주녕")
-                    std.message = Message.objects.get(message_id=message.message_id)
-                    std.warning_time=datetime.now()
-                    std.warning_cause=''
-                    for i in range(3):
-                        if message_info[message.message_id][i]==1 and i==0:
-                            std.warning_cause+='반말/존댓말 여부 다름,'
-                        if message_info[message.message_id][i]==1 and i==1:
-                            std.warning_cause+='자주 틀리는 맞춤법을 사용하지 않음,'
-                        if message_info[message.message_id][i]==1 and i==2:
-                            std.warning_cause+='피싱 메시지 위험 키워드 감지,'
-                    std.save()
-                else:
-                    pass
-            else:
-                w_message.is_warning=0
-
-            w_message.save()
-            redirect("/")
-    print(message_info)
-
-
-            
     return render(request, 'index.html', {'messageList': messageList})
 
 
@@ -320,4 +190,133 @@ def iconicSpell(request):
     user = User.objects.get(user_name='주녕')
     user.accent_spell=str(top_3_most_common_characters)
     user.save()
+    return redirect('/')
+
+def findWarningMessage(request):
+    messageList=Message.objects.all()
+    message_info={}
+    for message in messageList:
+        message_info[message.message_id]=[]
+    user = User.objects.get(user_name='주녕') 
+
+    def is_formal_match():
+        sentences = dataset_sentences
+        labels = dataset_labels  # 1: 반말, 0: 존댓말
+
+        # 텍스트 데이터를 정수 시퀀스로 변환
+        tokenizer = Tokenizer(oov_token="<OOV>")
+        tokenizer.fit_on_texts(sentences)
+        word_index = tokenizer.word_index
+        sequences = tokenizer.texts_to_sequences(sentences)
+
+        # 시퀀스 패딩
+        max_length = max([len(seq) for seq in sequences])
+        padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post')
+
+        #overfitting을 방지하기 위한 early stopping
+        early_stopping = EarlyStopping()
+
+        # 데이터 형식 맞추기
+        padded_sequences = np.array(padded_sequences)
+        labels = np.array(labels)
+
+        # 데이터셋을 훈련 데이터와 테스트 데이터로 분리
+        X_train, X_test, y_train, y_test = train_test_split(padded_sequences, labels, test_size=0.2, random_state=42)
+
+        # 모델 생성 및 훈련
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Embedding(len(word_index) + 1, 32, input_length=max_length),
+            tf.keras.layers.Conv1D(64, 5, activation='relu'),
+            tf.keras.layers.MaxPooling1D(4),
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(64, return_sequences=True)),
+            tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(32)),
+            tf.keras.layers.Dense(32, activation='relu'),
+            tf.keras.layers.Dense(1, activation='sigmoid')
+        ])
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+        model.fit(X_train, y_train, epochs=10, callbacks=[early_stopping])
+
+        # 테스트 데이터에 대한 예측
+        y_pred = model.predict(X_test)
+        y_pred = (y_pred > 0.5).astype(int)
+
+        # 정확도 평가
+        accuracy = accuracy_score(y_test, y_pred)
+        print("테스트 데이터 정확도:", accuracy)
+
+        # 새로운 텍스트 예측
+        new_texts = [spell_checker.check(message.message_content).checked for message in messageList]
+
+        new_sequences = tokenizer.texts_to_sequences(new_texts)
+        new_padded_sequences = pad_sequences(new_sequences, maxlen=max_length, padding='post')
+        predictions = model.predict(new_padded_sequences)
+
+        for i, text in enumerate(new_texts):
+            if predictions[i] <= 0.5:
+                is_formal = 0
+            else:
+                is_formal = 1
+
+            print(text, ':', is_formal)
+            print(is_formal, user.accent_formal)
+
+            if is_formal != user.accent_formal:
+                message_info[i+1].append(1)
+            else:
+                message_info[i+1].append(0)
+                
+    def spell_match():
+        user_spell_tuple=eval(user.accent_spell)
+        user_spell=[user_spell_tuple[i][1] for i in range(3)]
+        origin_spell=[user_spell_tuple[i][0] for i in range(3)]
+
+        new_texts = [message.message_content for message in messageList]
+        for i, text in enumerate(new_texts):
+            if any(char in text for char in origin_spell):
+                if not any(char2 in text for char2 in user_spell):
+                    message_info[i+1].append(1)
+                else:
+                    message_info[i+1].append(0)
+            else:
+                message_info[i+1].append(0)
+    def keyword_match():
+        new_texts = [message.message_content for message in messageList]
+        for i, text in enumerate(new_texts):
+            if any(char in text for char in phishing_keyword):       
+                message_info[i+1].append(1)
+            else:
+                message_info[i+1].append(0)
+
+    if len(messageList)>10:
+        is_formal_match()
+        spell_match()
+        keyword_match()
+        for message in messageList:
+            w_message=Message.objects.get(message_id=message.message_id)
+
+            if message_info[message.message_id].count(1) >= 2:
+                w_message.is_warning=1
+                if not Warning.objects.filter(message_id=message.message_id):
+                    std =Warning()
+                    std.message = Message.objects.get(message_id=message.message_id)
+                    std.user = User.objects.get(user_name="주녕")
+                    std.message = Message.objects.get(message_id=message.message_id)
+                    std.warning_time=datetime.now()
+                    std.warning_cause=''
+                    for i in range(3):
+                        if message_info[message.message_id][i]==1 and i==0:
+                            std.warning_cause+='반말/존댓말 여부 다름,'
+                        if message_info[message.message_id][i]==1 and i==1:
+                            std.warning_cause+='자주 틀리는 맞춤법을 사용하지 않음,'
+                        if message_info[message.message_id][i]==1 and i==2:
+                            std.warning_cause+='피싱 메시지 위험 키워드 감지,'
+                    std.save()
+                else:
+                    pass
+            else:
+                w_message.is_warning=0
+
+            w_message.save()
+            redirect("/")
+    print(message_info)
     return redirect('/')

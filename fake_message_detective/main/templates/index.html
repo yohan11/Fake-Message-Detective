@@ -13,7 +13,11 @@
 	</head>
 	<body>
 		<div class="header">주녕</div>
-
+		<a href="{% url 'findWarningMessage' %}"
+			><button class="startBtn">
+				피싱으로 의심되는 메시지 알아보기
+			</button></a
+		>
 		<div class="in">
 			<ul>
 				{% for list in messageList %}
@@ -62,10 +66,12 @@
 										d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"
 									/>
 								</svg>
-								이 메시지가 '{{list.user}}'님이 보내신 메시지가 맞나요?
+								이 메시지가 '{{list.user}}'님이 보내신 메시지가
+								맞나요?
 							</p>
 							<p class="modal_subtitle">
-								결과를 기록해주시면, 다음에는 더 정확히 탐지할 수 있어요!
+								결과를 기록해주시면, 다음에는 더 정확히 탐지할
+								수 있어요!
 							</p>
 							<p class="wmsg_y">{{list.message_content}}</p>
 
@@ -90,7 +96,10 @@
 										style="display: none"
 									/>
 									{% csrf_token %}
-									<button type="submit" class="warning_check_btn invalid">
+									<button
+										type="submit"
+										class="warning_check_btn invalid"
+									>
 										네, <br />진짜메시지에요
 									</button>
 								</form>
@@ -114,7 +123,10 @@
 										style="display: none"
 									/>
 									{% csrf_token %}
-									<button type="submit" class="warning_check_btn valid">
+									<button
+										type="submit"
+										class="warning_check_btn valid"
+									>
 										아니요, <br />가짜메시지에요
 									</button>
 								</form>
