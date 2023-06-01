@@ -8,7 +8,6 @@ def index(request):
     messageList = Message.objects.all()
     return render(request, 'index.html', {'messageList': messageList})
 
-
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import MessageSerializer
@@ -279,6 +278,7 @@ def findWarningMessage(request):
                     message_info[i+1].append(0)
             else:
                 message_info[i+1].append(0)
+
     def keyword_match():
         new_texts = [message.message_content for message in messageList]
         for i, text in enumerate(new_texts):
@@ -287,10 +287,67 @@ def findWarningMessage(request):
             else:
                 message_info[i+1].append(0)
 
+    def adapt_feedback():
+        real_phishing_message=[]
+        not_phishing_message=[]
+
+        for message in messageList:
+            if Warning.objects.filter(message=message.message_id):
+                if Warning.objects.filter(message=message.message_id).filter(warning_valid=1):
+                    real_phishing_message.append(message.message_content)
+                else:
+                    not_phishing_message.append(message.message_content)
+
+        dataset = real_phishing_message + not_phishing_message
+        labels = [1]*len(real_phishing_message) + [0]*len(not_phishing_message)
+
+        print(dataset, labels)
+
+        # 텍스트 데이터를 정수 시퀀스로 변환
+        tokenizer = Tokenizer(oov_token="<OOV>")
+        tokenizer.fit_on_texts(dataset)
+        sequences = tokenizer.texts_to_sequences(dataset)
+
+        # 시퀀스 패딩
+        max_length = max(len(seq) for seq in sequences)
+        padded_sequences = pad_sequences(sequences, maxlen=max_length, padding='post')
+
+        # 모델 생성
+        model = tf.keras.models.Sequential([
+            tf.keras.layers.Embedding(len(tokenizer.word_index) + 1, 32, input_length=max_length),
+            tf.keras.layers.GlobalAveragePooling1D(),
+            tf.keras.layers.Dense(16, activation='relu'),
+            tf.keras.layers.Dense(1, activation='sigmoid')
+        ])
+        model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        # 데이터 형식 맞추기
+        padded_sequences = np.array(padded_sequences)
+        labels = np.array(labels)
+
+        # 모델 훈련
+        model.fit(padded_sequences, labels, epochs=10)
+
+        # 새로운 텍스트를 예측
+        new_texts = [message.message_content for message in messageList]
+
+        new_sequences = tokenizer.texts_to_sequences(new_texts)
+        new_padded_sequences = pad_sequences(new_sequences, maxlen=max_length, padding='post')
+        predictions = model.predict(new_padded_sequences)
+
+        for i, text in enumerate(new_texts):
+            if predictions[i] <= 0.5:
+                message_info[i+1].append(0)
+            else:
+                message_info[i+1].append(1)
+            print("예측 결과:", predictions[i])
+
+    
     if len(messageList)>10:
         is_formal_match()
         spell_match()
         keyword_match()
+        adapt_feedback()
         for message in messageList:
             w_message=Message.objects.get(message_id=message.message_id)
 
@@ -310,6 +367,8 @@ def findWarningMessage(request):
                             std.warning_cause+='자주 틀리는 맞춤법을 사용하지 않음,'
                         if message_info[message.message_id][i]==1 and i==2:
                             std.warning_cause+='피싱 메시지 위험 키워드 감지,'
+                        if message_info[message.message_id][i]==1 and i==3:
+                            std.warning_cause+='동일 유형 메시지의 경고 유효 이력 존재,'
                     std.save()
                 else:
                     pass
@@ -320,3 +379,4 @@ def findWarningMessage(request):
             redirect("/")
     print(message_info)
     return redirect('/')
+
