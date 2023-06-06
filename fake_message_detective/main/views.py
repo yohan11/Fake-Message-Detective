@@ -1,24 +1,32 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Message, Warning, User
-# Create your views here.
+import tensorflow as tf
+from tensorflow.keras import callbacks
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+import numpy as np
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+import string
+from datetime import datetime
+from collections import Counter
+from .dataset import dataset_labels, dataset_sentences, phishing_keyword
+from .serializers import MessageSerializer
+from .hanspell import spell_checker
+
 
 def index(request):
     messageList = Message.objects.all()
     return render(request, 'index.html', {'messageList': messageList})
-
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from .serializers import MessageSerializer
 
 @api_view(['GET'])
 def getMessageDatas(request):
     datas = Message.objects.all()
     serializer = MessageSerializer(datas, many=True)
     return Response(serializer.data)
-
-from datetime import datetime
 
 def inputform(request):
     if request.method == 'POST':
@@ -27,7 +35,6 @@ def inputform(request):
         std.message_content = request.POST['message_content']
         std.message_sent_time = datetime.now()
         std.save()
-
     return redirect('/')
 
 def inputInvalid(request):
@@ -35,7 +42,6 @@ def inputInvalid(request):
         std = Warning.objects.get(message=request.POST['warning_message_id'])
         std.warning_valid=0
         std.save()
-
     return redirect('/')
 
 def inputValid(request):
@@ -43,20 +49,10 @@ def inputValid(request):
         std = Warning.objects.get(message=request.POST['warning_message_id'])
         std.warning_valid=1
         std.save()
-
     return redirect('/')
 
-#말투 학습 부분
-
+# 말투 학습 부분
 ## 반말/존댓말 구분
-import tensorflow as tf
-from tensorflow.keras import callbacks
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-import numpy as np
-from .dataset import dataset_labels, dataset_sentences, phishing_keyword
-
 def classifyBanJon(request):
     # 반말과 존댓말 데이터 셋 준비
     sentences = dataset_sentences
@@ -121,10 +117,6 @@ def classifyBanJon(request):
     return redirect('/')
 
 ##자주 틀리는 맞춤법 추출
-from .hanspell import spell_checker
-from collections import Counter
-import string
-   
 def iconicSpell(request):
     # 문법 오류 교정
     def check_spelling_errors(text):
@@ -191,6 +183,7 @@ def iconicSpell(request):
     user.save()
     return redirect('/')
 
+# 새로운 메시지에 대해 경고 메시지인지 판별
 def findWarningMessage(request):
     messageList=Message.objects.all()
     message_info={}
@@ -198,6 +191,7 @@ def findWarningMessage(request):
         message_info[message.message_id]=[]
     user = User.objects.get(user_name='주녕') 
 
+    # 유저의 기존 말투(반말/존댓말)와 유사한지 판별
     def is_formal_match():
         sentences = dataset_sentences
         labels = dataset_labels  # 1: 반말, 0: 존댓말
@@ -264,6 +258,7 @@ def findWarningMessage(request):
             else:
                 message_info[i+1].append(0)
                 
+    # 유저의 기존 말투(자주 틀리는 맞춤법)와 유사한지 판별
     def spell_match():
         user_spell_tuple=eval(user.accent_spell)
         user_spell=[user_spell_tuple[i][1] for i in range(3)]
@@ -279,6 +274,7 @@ def findWarningMessage(request):
             else:
                 message_info[i+1].append(0)
 
+    # 피싱메시지에 자주 사용되는 단어 키워드가 포함되어있는지 판별
     def keyword_match():
         new_texts = [message.message_content for message in messageList]
         for i, text in enumerate(new_texts):
@@ -287,6 +283,7 @@ def findWarningMessage(request):
             else:
                 message_info[i+1].append(0)
 
+    # 사용자의 피드백을 받아 학습에 반영
     def adapt_feedback():
         real_phishing_message=[]
         not_phishing_message=[]
@@ -342,7 +339,7 @@ def findWarningMessage(request):
                 message_info[i+1].append(1)
             print("예측 결과:", predictions[i])
 
-    
+    # 메시지 데이터가 10개 이상 쌓였을 때 학습 진행
     if len(messageList)>10:
         is_formal_match()
         spell_match()
@@ -351,7 +348,7 @@ def findWarningMessage(request):
         for message in messageList:
             w_message=Message.objects.get(message_id=message.message_id)
 
-            if message_info[message.message_id].count(1) >= 2:
+            if message_info[message.message_id].count(1) >= 3:
                 w_message.is_warning=1
                 if not Warning.objects.filter(message_id=message.message_id):
                     std =Warning()
